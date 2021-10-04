@@ -14,7 +14,7 @@
             "kind": "Scheduled",
             "apiVersion": "2021-03-01-preview",
             "properties": {
-                "displayName": "Test Alert Rule",
+                "displayName": "[Public]Test Alert Rule",
                 "description": "",
                 "severity": "Informational",
                 "enabled": false,
