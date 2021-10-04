@@ -8,8 +8,8 @@
     },
     "resources": [
         {
-            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/73025b7e-048d-4dde-8043-d2e92f5e84c0')]",
-            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/73025b7e-048d-4dde-8043-d2e92f5e84c0')]",
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/', guid('Receive Phishing E-mail to User')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', guid('Receive Phishing E-mail to User'))]",
             "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
             "kind": "Scheduled",
             "apiVersion": "2021-03-01-preview",
