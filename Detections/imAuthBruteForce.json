@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/', guid('Brute force attack against user credentials (Uses Authentication Normalization)'))]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', guid('Brute force attack against user credentials (Uses Authentication Normalization)'))]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-03-01-preview",
+            "properties": {
+                "displayName": "[Public]Brute force attack against user credentials (Uses Authentication Normalization)",
+                "description": "Identifies evidence of brute force activity against a user highlighting multiple authentication failures and by a successful authentication within a given time window. (The query does not enforce any sequence - eg requiring the successful authentication to occur last.) Default Failure count is 10, Default Success count is 1 and default Time Window is 20 minutes. To use this analytics rule, make sure you have deployed the [ASIM normalization parsers](https://aka.ms/AzSentinelAuthentication)",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "  let failureCountThreshold = 10; let successCountThreshold = 1; let authenticationWindow = 20m; imAuthentication | summarize StartTime = min(TimeGenerated), EndTime = max(TimeGenerated), IPAddress = make_set(SrcDvcIpAddr), FailureCount = countif(EventResult=='Failure'), SuccessCount = countif(EventResult=='Success') by bin(TimeGenerated, authenticationWindow), TargetUserId, TargetUsername, TargetUserType | where FailureCount >= failureCountThreshold and SuccessCount >= successCountThreshold",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT1H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": null
+            }
+        }
+    ]
+}
