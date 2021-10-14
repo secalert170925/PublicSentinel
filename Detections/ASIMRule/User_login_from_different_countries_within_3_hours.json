@@ -8,17 +8,17 @@
     },
     "resources": [
         {
-            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/', guid('User login from different countries within 3 hours'))]",
-            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', guid('User login from different countries within 3 hours'))]",
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/b6fda6ee-1daf-5995-a821-cf0e899f868e')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/b6fda6ee-1daf-5995-a821-cf0e899f868e')]",
             "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
             "kind": "Scheduled",
-            "apiVersion": "2021-03-01-preview",
+            "apiVersion": "2021-09-01-preview",
             "properties": {
                 "displayName": "[Public]User login from different countries within 3 hours (Uses Authentication Normalization)",
                 "description": "This query searches for successful user logins from different countries within 3 hours.\\n\n This is a normaliztion version of alert rule: 2954d424-f786-4677-9ffc-c24c44c6e7d5\n To use this analytics rule, make sure you have deployed the [ASIM normalization parsers](https://aka.ms/AzSentinelAuthentication)",
                 "severity": "High",
                 "enabled": true,
-                "query": "let timeframe = ago(3h);\nlet threshold = 2;\nimAuthentication\n| where TimeGenerated > timeframe\n| where EventType=='Logon' and EventResult=='Success'\n| where isnotempty(SrcGeoCountry)\n| extend IpCountry = strcat(IPAddress, "-", SrcGeoCountry)\n| summarize StartTime = min(TimeGenerated), EndTime = max(TimeGenerated), Vendors=make_set(EventVendor), Products=make_set(EventProduct)\n  , NumOfCountries = dcount(SrcGeoCountry), NameOfCountries = make_set(SrcGeoCountry), IpOfCountries = make_set(IpCountry)\n  by TargetUserId, TargetUsername, TargetUserType\n| where NumOfCountries >= threshold\n| extend timestamp = StartTime, AccountCustomEntity = TargetUsername",
+                "query": "let timeframe = ago(3h);\nlet threshold = 2;\nimAuthentication\n| where TimeGenerated > timeframe\n| where EventType=='Logon' and EventResult=='Success'\n| where isnotempty(SrcGeoCountry)\n| summarize StartTime = min(TimeGenerated), EndTime = max(TimeGenerated), Vendors=make_set(EventVendor), Products=make_set(EventProduct)\n  , NumOfCountries = dcount(SrcGeoCountry), NameOfCountries = make_set(SrcGeoCountry)\n  by TargetUserId, TargetUsername, TargetUserType\n| where NumOfCountries >= threshold\n| extend timestamp = StartTime, AccountCustomEntity = TargetUsername",
                 "queryFrequency": "PT3H",
                 "queryPeriod": "PT3H",
                 "triggerOperator": "GreaterThan",
