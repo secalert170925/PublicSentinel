@@ -1,0 +1,74 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/', guid('Operation to Azure AD User'))]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/, guid('Operation to Azure AD User'))]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-09-01-preview",
+            "properties": {
+                "displayName": "[Private]Operation to Azure AD User",
+                "description": "Azure ADに対する設定変更等が発生しました。",
+                "severity": "High",
+                "enabled": true,
+                "query": "AuditLogs\n| where TimeGenerated between (ago(14d) .. now())\n| extend Ingest = iff(isnotempty(ingestion_time()), ingestion_time(), TimeGenerated)\n| where Ingest between (ago(1d) .. now())\n| extend InitiatedApp = iff(isnotempty(parse_json(InitiatedBy).app), parse_json(InitiatedBy).app.displayName, \"\")\n| extend\n    InitiatedUser = iff(isnotempty(parse_json(InitiatedBy).user), parse_json(InitiatedBy).user.userPrincipalName, \"\"),\n    InitiatedUserId = iff(isnotempty(parse_json(InitiatedBy).user), parse_json(InitiatedBy).user.id, \"\"),\n    InitiatedIpAddress = iff(isnotempty(parse_json(InitiatedBy).user), parse_json(InitiatedBy).user.ipAddress, \"\")\n| extend\n    TargetUser = parse_json(TargetResources)[0].userPrincipalName,\n    TargetUserId = parse_json(TargetResources)[0].id\n| where not(tostring(InitiatedBy) == \"{}\" and Identity == \"Microsoft Online Services\")\n| where not(tostring(InitiatedBy) == \"{}\" and Identity == \"Microsoft Azure AD Internal\" and TargetResources[0].displayName == \"Google Cloud (Provisioning)\")\n| where not(Identity == \"surumeinu-LogicApps-07\" and OperationName == \"Delete user\")\n| where not(Identity == \"Azure Logic Apps - Azure AD\" and InitiatedUser == \"surumeinu@serumusare.onmicrosoft.com\" and OperationName == \"Add user\")\n| where InitiatedApp !in~ (\"Managed Service Identity\", \"Windows Azure Service Management API\", \"Azure AD Cloud Sync\")\n| extend ItemId = _ItemId\n| extend TempTarget = TargetResources\n| mv-expand TempTarget\n| where not(TempTarget.modifiedProperties contains 'StrongAuthenticationPhoneAppDetail' and InitiatedUser == 'fim_password_service@support.onmicrosoft.com')\n| summarize arg_max(TimeGenerated, *) by ItemId",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P14D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "DefenseEvasion",
+                    "PrivilegeEscalation",
+                    "Persistence"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "InitiatedUser"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "InitiatedIpAddress"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
