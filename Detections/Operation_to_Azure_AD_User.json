@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/', guid('Operation to Azure AD User'))]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/', guid('Operation to Azure AD User'))]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-09-01-preview",
+            "properties": {
+                "displayName": "[Public]Operation to Azure AD User",
+                "description": "Azure ADユーザーに対する設定変更等が発生しました。",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "AuditLogs\r\n| where TimeGenerated between (ago(1d) .. now())\r\n| extend Ingest = iff(isnotempty(ingestion_time()), ingestion_time(), TimeGenerated)\r\n| where Ingest between (ago(5m) .. now())\r\n| extend InitiatedApp = iff(isnotempty(parse_json(InitiatedBy).app), parse_json(InitiatedBy).app.displayName, \"\")\r\n| extend\r\n    InitiatedUser = iff(isnotempty(parse_json(InitiatedBy).user), parse_json(InitiatedBy).user.userPrincipalName, \"\"),\r\n    InitiatedUserId = iff(isnotempty(parse_json(InitiatedBy).user), parse_json(InitiatedBy).user.id, \"\"),\r\n    InitiatedIpAddress = iff(isnotempty(parse_json(InitiatedBy).user), parse_json(InitiatedBy).user.ipAddress, \"\")\r\n| extend\r\n    TargetUser = parse_json(TargetResources)[0].userPrincipalName,\r\n    TargetUserId = parse_json(TargetResources)[0].id\r\n| where not(tostring(InitiatedBy) == \"{}\" and Identity == \"Microsoft Online Services\")\r\n| where InitiatedApp !in~ (\"Managed Service Identity\", \"Windows Azure Service Management API\")\r\n| extend ItemId = _ItemId\r\n| extend TempTarget = TargetResources\r\n| mv-expand TempTarget\r\n| where not(TempTarget.modifiedProperties contains 'StrongAuthenticationPhoneAppDetail' and InitiatedUser == 'fim_password_service@support.onmicrosoft.com')\r\n| summarize arg_max(TimeGenerated, *) by ItemId",
+                "queryFrequency": "P5M",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "InitiatedUser"
+                            },
+                            {
+                                "identifier": "AadUserId",
+                                "columnName": "InitiatedUserId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "TargetUser"
+                            },
+                            {
+                                "identifier": "AadUserId",
+                                "columnName": "TargetUserId"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
