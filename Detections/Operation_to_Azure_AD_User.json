@@ -8,8 +8,8 @@
     },
     "resources": [
         {
-            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/', guid('Operation to Azure AD User'))]",
-            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/, guid('Operation to Azure AD User'))]",
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/86014260-e055-45b0-b16d-00bca98c8bc9')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/86014260-e055-45b0-b16d-00bca98c8bc9')]",
             "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
             "kind": "Scheduled",
             "apiVersion": "2021-09-01-preview",
